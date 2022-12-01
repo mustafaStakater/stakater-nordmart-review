@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.data.annotation.Id;
 
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -21,14 +22,18 @@ public class Review implements Serializable {
 
     @Id
     String id;
-
+    @NotBlank
     String productId;
     String customerName = "";
     int rating = 3;
     String reviewText = "";
     Date dateTime;
 
-    public Review(final String productId, final String customerName, final String rating, final String text) {
+    public Review(
+            final String productId,
+            final String customerName,
+            final String rating,
+            final String text) {
         super();
         setRating(NumberUtils.toInt(rating, 3));
         if (StringUtils.isNotBlank(text)) {
@@ -46,7 +51,7 @@ public class Review implements Serializable {
 
     public static int getRangedRating(final int rating) {
         if (rating < 1) {
-            return  1;
+            return 1;
         }
         return Math.min(rating, 5);
     }

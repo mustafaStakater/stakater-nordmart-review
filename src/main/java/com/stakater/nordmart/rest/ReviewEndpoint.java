@@ -1,10 +1,13 @@
 package com.stakater.nordmart.rest;
 
+import com.stakater.nordmart.exception.InvalidDataException;
 import com.stakater.nordmart.model.Review;
 import com.stakater.nordmart.service.ReviewService;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,16 +24,16 @@ import java.util.List;
 
 @RestController
 @Path("/review")
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReviewEndpoint {
-    private static final Logger LOG = LoggerFactory.getLogger(ReviewEndpoint.class);
-
-    @Autowired
-    private ReviewService reviewService;
+    static final Logger LOG = LoggerFactory.getLogger(ReviewEndpoint.class);
+    final ReviewService reviewService;
 
     @GET
     @Path("/{productId}")
     @Produces(MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Review>> getReview2(@PathParam("productId") String productId) {
+    public ResponseEntity<List<Review>> get(final @PathParam("productId") String productId) {
         List<Review> ret = reviewService.getReviews(productId);
         LOG.info("<rest getReview2");
 
@@ -43,17 +46,22 @@ public class ReviewEndpoint {
     @POST
     @Path("/{productId}/{customerName}/{rating}/{text}")
     @Produces(MediaType.APPLICATION_JSON_VALUE)
-    public Review add(@PathParam("productId") String productId,
-                      @PathParam("customerName") String customerName,
-                      @PathParam("rating") String rating,
-                      @PathParam("text") String text) {
-        return reviewService.addReview(productId, customerName, rating, text);
+    public ResponseEntity add(final @PathParam("productId") String productId,
+                              final @PathParam("customerName") String customerName,
+                              final @PathParam("rating") String rating,
+                              final @PathParam("text") String text) {
+        try {
+            Review review = reviewService.addReview(productId, customerName, rating, text);
+            return ResponseEntity.ok(review);
+        } catch (InvalidDataException ie) {
+            return ResponseEntity.badRequest().body(ie.getMessage());
+        }
     }
 
     @DELETE
     @Path("/{reviewId}")
     @Produces(MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> delete(@PathParam("reviewId") String reviewId) {
+    public ResponseEntity<String> delete(final @PathParam("reviewId") String reviewId) {
         String response = reviewService.deleteReview(reviewId);
         return ResponseEntity
                 .ok()
@@ -66,7 +74,7 @@ public class ReviewEndpoint {
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin
     public ResponseEntity<String> logError() {
-        String msg = "LOGGING ERROR FOR TILT HANZALA";
+        String msg = "LOG ERROR MSG";
         LOG.error(msg);
 
         return ResponseEntity
